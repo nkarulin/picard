@@ -29,12 +29,15 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.StringUtil;
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import picard.PicardException;
 import picard.cmdline.CommandLineProgramTest;
 import picard.annotation.RefFlatReader.RefFlatColumns;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 
 public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
@@ -112,7 +115,54 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(metrics.PCT_R2_TRANSCRIPT_STRAND_READS, 0.666667);
     }
 
-    @Test
+    @DataProvider(name = "rRnaIntervalsFiles")
+    public static Object[][] rRnaIntervalsFiles() throws IOException {
+        return new Object[][] {
+                {null},
+                {File.createTempFile("tmp.rRna.", ".interval_list")}  // empty file
+        };
+    }
+
+    @Test(dataProvider = "rRnaIntervalsFiles", expectedExceptions = PicardException.class)
+    public void testNoIntevalsNoFragPercentage(final File rRnaIntervalsFile) throws Exception {
+        if ( rRnaIntervalsFile != null  ) rRnaIntervalsFile.deleteOnExit();
+        final String sequence = "chr1";
+        final String ignoredSequence = "chrM";
+
+        // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+        // Set seed so that strandedness is consistent among runs.
+        builder.setRandomSeed(0);
+        final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
+        builder.addPair("pair1", sequenceIndex, 45, 475);
+
+        builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
+
+        final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
+        samFile.deleteOnExit();
+
+        final SAMFileWriter samWriter = new SAMFileWriterFactory().makeSAMWriter(builder.getHeader(), false, samFile);
+        for (final SAMRecord rec : builder.getRecords()) samWriter.addAlignment(rec);
+        samWriter.close();
+
+        // Generate the metrics.
+        final File metricsFile = File.createTempFile("tmp.", ".rna_metrics");
+        metricsFile.deleteOnExit();
+
+        final String rRnaIntervalsPath = rRnaIntervalsFile != null ? rRnaIntervalsFile.getAbsolutePath() : null;
+        final String[] args = new String[]{
+                "INPUT=" + samFile.getAbsolutePath(),
+                "OUTPUT=" + metricsFile.getAbsolutePath(),
+                "REF_FLAT=" + getRefFlatFile(sequence).getAbsolutePath(),
+                "RIBOSOMAL_INTERVALS=" + rRnaIntervalsPath,
+                "RRNA_FRAGMENT_PERCENTAGE=" + 0.0,
+                "STRAND_SPECIFICITY=SECOND_READ_TRANSCRIPTION_STRAND",
+                "IGNORE_SEQUENCE=" + ignoredSequence
+        };
+        Assert.assertEquals(runPicardCommandLine(args), 0);
+    }
+
+        @Test
     public void testMultiLevel() throws Exception {
         final String sequence = "chr1";
         final String ignoredSequence = "chrM";

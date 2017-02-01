@@ -137,6 +137,11 @@ static final String USAGE_DETAILS = "<p>This tool takes a SAM/BAM file containin
     @Override
     protected void setup(final SAMFileHeader header, final File samFile) {
 
+        // No ribosomal intervals and rRNA fragment percentage = 0
+        if ( (RIBOSOMAL_INTERVALS == null || RIBOSOMAL_INTERVALS.length() == 0) && RRNA_FRAGMENT_PERCENTAGE == 0 ) {
+            throw new PicardException("Must use a RIBOSOMAL_INTERVALS file if RRNA_FRAGMENT_PERCENTAGE = 0.0");
+        }
+
         if (CHART_OUTPUT != null) IOUtil.assertFileIsWritable(CHART_OUTPUT);
 
         final OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REF_FLAT, header.getSequenceDictionary());
