@@ -60,14 +60,14 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         return new PerUnitRnaSeqMetricsCollector(sample, library, readGroup, ribosomalInitialValue);
     }
 
-    public static OverlapDetector<Interval> makeOverlapDetector(final File samFile, final SAMFileHeader header, final File ribosomalIntervalsFile) {
+    public static OverlapDetector<Interval> makeOverlapDetector(final File samFile, final SAMFileHeader header, final File ribosomalIntervalsFile, final double rrnaFragmentPercentage) {
 
         OverlapDetector<Interval> ribosomalSequenceOverlapDetector = new OverlapDetector<Interval>(0, 0);
         if (ribosomalIntervalsFile != null) {
 
             final IntervalList ribosomalIntervals = IntervalList.fromFile(ribosomalIntervalsFile);
-            if ( ribosomalIntervals.size() == 0 ) {
-                throw new PicardException("The RIBOSOMAL_INTERVALS file, " + ribosomalIntervalsFile.getAbsolutePath() + " is missing intervals");
+            if ( ribosomalIntervals.size() == 0 && rrnaFragmentPercentage == 0.0) {
+                throw new PicardException("The RIBOSOMAL_INTERVALS file, " + ribosomalIntervalsFile.getAbsolutePath() + " must containn intervals if the rRNA fragment percentage = 0");
             }
             try {
                 SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
