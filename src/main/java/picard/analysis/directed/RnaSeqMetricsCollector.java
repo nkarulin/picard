@@ -66,6 +66,9 @@ public class RnaSeqMetricsCollector extends SAMRecordMultiLevelCollector<RnaSeqM
         if (ribosomalIntervalsFile != null) {
 
             final IntervalList ribosomalIntervals = IntervalList.fromFile(ribosomalIntervalsFile);
+            if ( ribosomalIntervals.size() == 0 ) {
+                throw new PicardException("The RIBOSOMAL_INTERVALS file, " + ribosomalIntervalsFile.getAbsolutePath() + " is missing intervals");
+            }
             try {
                 SequenceUtil.assertSequenceDictionariesEqual(header.getSequenceDictionary(), ribosomalIntervals.getHeader().getSequenceDictionary());
             } catch (SequenceUtil.SequenceListsDifferException e) {

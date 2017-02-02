@@ -119,23 +119,29 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
     public static Object[][] rRnaIntervalsFiles() throws IOException {
         return new Object[][] {
                 {null},
-                {File.createTempFile("tmp.rRna.", ".interval_list")}  // empty file
+                {File.createTempFile("tmp.rRna.", ".interval_list")}
         };
     }
 
     @Test(dataProvider = "rRnaIntervalsFiles", expectedExceptions = PicardException.class)
     public void testNoIntevalsNoFragPercentage(final File rRnaIntervalsFile) throws Exception {
-        if ( rRnaIntervalsFile != null  ) rRnaIntervalsFile.deleteOnExit();
+        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
+
+        // Add a header but no intervals
+        if ( rRnaIntervalsFile != null  ) {
+            final IntervalList rRnaIntervalList = new IntervalList(builder.getHeader());
+            rRnaIntervalList.write(rRnaIntervalsFile);
+            rRnaIntervalsFile.deleteOnExit();
+        }
+
+        // Create some alignments
         final String sequence = "chr1";
         final String ignoredSequence = "chrM";
 
-        // Create some alignments that hit the ribosomal sequence, various parts of the gene, and intergenic.
-        final SAMRecordSetBuilder builder = new SAMRecordSetBuilder(true, SAMFileHeader.SortOrder.coordinate);
         // Set seed so that strandedness is consistent among runs.
         builder.setRandomSeed(0);
         final int sequenceIndex = builder.getHeader().getSequenceIndex(sequence);
         builder.addPair("pair1", sequenceIndex, 45, 475);
-
         builder.addFrag("ignoredFrag", builder.getHeader().getSequenceIndex(ignoredSequence), 1, false);
 
         final File samFile = File.createTempFile("tmp.collectRnaSeqMetrics.", ".sam");
@@ -162,7 +168,7 @@ public class CollectRnaSeqMetricsTest extends CommandLineProgramTest {
         Assert.assertEquals(runPicardCommandLine(args), 0);
     }
 
-        @Test
+    @Test
     public void testMultiLevel() throws Exception {
         final String sequence = "chr1";
         final String ignoredSequence = "chrM";
