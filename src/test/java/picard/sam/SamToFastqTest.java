@@ -209,7 +209,7 @@ public class SamToFastqTest extends CommandLineProgramTest {
     @DataProvider(name = "okGroupedFiles")
     public Object[][] okGroupedFiles() {
         return new Object[][] {
-            {"ok/grouped-last-pair-mates-flipped.sam", null,  null,  new String[]{"rg1","rg2"}},
+            {"ok/grouped-last-pair-mates-flipped.sam", new String[]{"rg1","rg2"}},
         };
     }
 
@@ -217,15 +217,21 @@ public class SamToFastqTest extends CommandLineProgramTest {
     @DataProvider(name = "badGroupedFiles")
     public Object[][] badGroupedFiles() {
         return new Object[][] {
-            {"bad/grouped-unpaired-mate.sam", null,  null,  new String[]{"rg1.fastq","rg2.fastq"}}
+            {"bad/grouped-unpaired-mate.sam"}
+        };
+    }
+
+    @DataProvider(name = "missingRgFiles")
+    public Object[][] missingRgFiles() {
+        return new Object[][] {
+                {"bad/missing-rg-info.sam"}
         };
     }
 
     @Test(dataProvider = "okGroupedFiles")
-    public void testOkGroupedFiles(final String samFilename, final String fastq, final String secondEndFastq,
-                                   final String [] groupFiles) throws IOException {
+    public void testOkGroupedFiles(final String samFilename, final String [] groupFiles) throws IOException {
         final File samFile = new File(TEST_DATA_DIR,samFilename);
-        final Map<String, Set<String>> outputSets = new HashMap<String, Set<String>>(groupFiles.length);
+        final Map<String, Set<String>> outputSets = new HashMap<>(groupFiles.length);
 
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
         final String [] args = new String[]{
@@ -284,32 +290,25 @@ public class SamToFastqTest extends CommandLineProgramTest {
         }
     }
 
-
-    @Test (dataProvider = "badGroupedFiles", expectedExceptions= SAMException.class)
-    public void testBadGroupedFile(final String samFilename, final String fastq, final String secondEndFastq,
-                                   final String [] groupFiles) throws IOException {
-        final File samFile = new File(TEST_DATA_DIR,samFilename);
+    private void runWithOutputPerRg(final String samFilename) {
+        final File samFile = new File(TEST_DATA_DIR, samFilename);
         final String tmpDir = IOUtil.getDefaultTmpDir().getAbsolutePath() + "/";
-        final String [] args = new String[]{
-              "INPUT=" + samFile.getAbsolutePath(),
-              "OUTPUT_PER_RG=true",
-              "OUTPUT_DIR=" + tmpDir,
+        final String[] args = new String[]{
+                "INPUT=" + samFile.getAbsolutePath(),
+                "OUTPUT_PER_RG=true",
+                "OUTPUT_DIR=" + tmpDir,
         };
         runPicardCommandLine(args);
+    }
 
-        File f1;
-        File f2;
-        String fname1;
-        String fname2;
-        for(final String groupPUName : groupFiles)
-        {
-            fname1 = tmpDir + groupPUName + "_1.fastq";
-            fname2 = tmpDir + groupPUName + "_2.fastq";
-            f1 = new File(fname1);
-            f2 = new File(fname2);
-            f1.deleteOnExit();
-            f1.deleteOnExit();
-        }
+    @Test (dataProvider = "badGroupedFiles", expectedExceptions=SAMException.class)
+    public void testBadGroupedFile(final String samFilename) {
+        runWithOutputPerRg(samFilename);
+    }
+
+    @Test (dataProvider = "missingRgFiles", expectedExceptions=PicardException.class)
+    public void testMissingRgFile(final String samFilename) {
+        runWithOutputPerRg(samFilename);
     }
 
     @Test(dataProvider = "trimmedData")
