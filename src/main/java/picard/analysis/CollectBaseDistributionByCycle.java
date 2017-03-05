@@ -131,8 +131,8 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
         metrics.write(OUTPUT);
         if (hist.isEmpty()) {
             log.warn("No valid bases found in input file. No plot will be produced.");
-        } else {
-            final int rResult = RExecutor.executeFromClasspath("picard/analysis/baseDistributionByCycle.R",
+        }  /*else {
+           final int rResult = RExecutor.executeFromClasspath("picard/analysis/baseDistributionByCycle.R",
                     OUTPUT.getAbsolutePath(),
                     CHART_OUTPUT.getAbsolutePath(),
                     INPUT.getName(),
@@ -140,7 +140,7 @@ public class CollectBaseDistributionByCycle extends SinglePassSamProgram {
             if (rResult != 0) {
                 throw new PicardException("R script nucleotideDistributionByCycle.R failed with return code " + rResult);
             }
-        }
+        }*/
     }
 
     private class HistogramGenerator {

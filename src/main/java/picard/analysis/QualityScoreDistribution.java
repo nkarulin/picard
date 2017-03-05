@@ -154,8 +154,8 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
         if (qHisto.isEmpty() && oqHisto.isEmpty()) {
             log.warn("No valid bases found in input file. No plot will be produced.");
         }
-        else {
-            // Now run R to generate a chart
+        /*else  {
+           // Now run R to generate a chart
             final int rResult = RExecutor.executeFromClasspath(
                     "picard/analysis/qualityScoreDistribution.R",
                     OUTPUT.getAbsolutePath(),
@@ -166,6 +166,6 @@ public class QualityScoreDistribution extends SinglePassSamProgram {
             if (rResult != 0) {
                 throw new PicardException("R script qualityScoreDistribution.R failed with return code " + rResult);
             }
-        }
+        }*/
     }
 }

@@ -204,6 +204,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
             log.warn("No valid bases found in input file. No plot will be produced.");
         }
         else {
+            /*
             // Now run R to generate a chart
             final int rResult = RExecutor.executeFromClasspath(
                     "picard/analysis/meanQualityByCycle.R",
@@ -214,7 +215,7 @@ public class MeanQualityByCycle extends SinglePassSamProgram {
 
             if (rResult != 0) {
                 throw new PicardException("R script meanQualityByCycle.R failed with return code " + rResult);
-            }
+            }*/
         }
     }
 }
