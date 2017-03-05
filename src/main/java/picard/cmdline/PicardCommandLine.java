@@ -144,7 +144,11 @@ public class PicardCommandLine {
         } else {
             if (args[0].equals("-h")) {
                 printUsage(classes, commandLineName);
-            } else if(args[0].equals("--list-commands")) {
+            }
+            else if (args[0].equals("-t")){
+                util.Test.testing(args);
+            }
+            else if(args[0].equals("--list-commands")) {
                 printCommandList(classes);
             } else {
                 if (simpleNameToClass.containsKey(args[0])) {
